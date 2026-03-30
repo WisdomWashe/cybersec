@@ -1,18 +1,17 @@
-
------
-
+````markdown
 # 🧱 TryHackMe: Bricks Heist - CTF Write-up
 
+---
+
 ## 📌 Table of Contents
+* [Overview](#-overview)
+* [Tool Installation Guide](#-tool-installation-guide)
+* [Phase 1: Reconnaissance & Enumeration](#-phase-1-reconnaissance--enumeration)
+* [Phase 2: Exploitation & Initial Access](#-phase-2-exploitation--initial-access)
+* [Phase 3: Post-Exploitation & Forensic Analysis](#-phase-3-post-exploitation--forensic-analysis)
+* [Investigation Summary](#-investigation-summary)
 
-  * [Overview](https://www.google.com/search?q=%23-overview)
-  * [Tool Installation Guide](https://www.google.com/search?q=%23-tool-installation-guide-windows--linux)
-  * [Phase 1: Reconnaissance & Enumeration](https://www.google.com/search?q=%23-phase-1-reconnaissance--enumeration)
-  * [Phase 2: Exploitation & Initial Access](https://www.google.com/search?q=%23-phase-2-exploitation--initial-access)
-  * [Phase 3: Post-Exploitation & Forensic Analysis](https://www.google.com/search?q=%23-phase-3-post-exploitation--forensic-analysis)
-  * [Investigation Summary](https://www.google.com/search?q=%23-investigation-summary)
-
------
+---
 
 ## 📝 Overview
 
@@ -22,105 +21,64 @@
 
 **Scenario:** We are tasked with investigating a compromised web server and identifying how the attacker gained access, what actions were performed, and attributing the threat.
 
------
+---
 
-# 🧰 Tool Installation Guide (Windows & Linux)
+## 🧰 Tool Installation Guide
 
-## 📝 Overview
-
-> This section outlines the installation process for the tools used in the Bricks Heist investigation. The setup is performed in a controlled lab environment for ethical hacking and security testing.
+### 📝 Overview
+This section outlines the installation process for the tools used in the Bricks Heist investigation. The setup is performed in a controlled lab environment for ethical hacking and security testing.
 
 **Tools Covered:**
+* Metasploit Framework
+* Nmap
 
-  * Metasploit Framework
-  * Nmap
+### 🪟 Windows Installation
 
------
-
-## 🪟 Windows Installation
-
-### 1\. Installing Metasploit Framework
-
+#### 1. Installing Metasploit Framework
 Metasploit can be installed on Windows using the official installer provided by Rapid7.
 
-**Steps:**
+1. Visit the official Metasploit website.
+2. Download the Windows installer (`.exe`).
+3. Run the installer and follow the setup wizard.
+4. Launch via terminal:
+   ```bash
+   msfconsole
+````
 
-1.  Visit the official Metasploit website
-2.  Download the Windows installer (`.exe`)
-3.  Run the installer
-4.  Follow the setup wizard (default settings recommended)
-5.  Complete installation
+#### 2\. Installing Nmap
 
-**Launching Metasploit:**
+1.  Download Nmap from the official website.
+2.  Run the installer and accept default configurations.
+3.  Verify installation:
+    ```bash
+    nmap --version
+    ```
 
-```bash
-msfconsole
-```
+### 🐧 Linux Installation (Kali Linux / Ubuntu)
 
------
-
-### 2\. Installing Nmap
-
-Nmap is used for network scanning and service enumeration.
-
-**Steps:**
-
-1.  Download Nmap from the official website
-2.  Run the installer
-3.  Accept default configurations
-4.  Complete installation
-
-**Verify Installation:**
-
-```bash
-nmap --version
-```
-
------
-
-## 🐧 Linux Installation (Kali Linux / Ubuntu)
-
-### 1\. Installing Metasploit Framework
+#### 1\. Installing Metasploit Framework
 
 ```bash
 sudo apt update
 sudo apt install metasploit-framework
-```
-
-**Launch Metasploit:**
-
-```bash
+# Launch:
 msfconsole
 ```
 
------
-
-### 2\. Installing Nmap
+#### 2\. Installing Nmap
 
 ```bash
 sudo apt install nmap
-```
-
-**Verify Installation:**
-
-```bash
+# Verify:
 nmap --version
 ```
 
------
-
-## 🖥️ Lab Environment Setup
-
-### Recommended Setup:
+### 🖥️ Lab Environment Setup
 
   * **Attacker Machine:** Kali Linux
   * **Target Machine:** Vulnerable VM (e.g., WordPress server)
-  * **Virtualization Software:** VirtualBox or VMware
-
-### Network Configuration:
-
-  * Host-only network (preferred for isolation)
-  * NAT (optional for internet access)
+  * **Virtualization:** VirtualBox or VMware
+  * **Network:** Host-only network (preferred for isolation)
 
 > ⚠️ **Warning:** Always perform penetration testing in a controlled and authorized lab environment.
 
@@ -131,7 +89,7 @@ nmap --version
 ### 1\. Port Scanning (Nmap)
 
 ```bash
-nmap -sC -sV MACHINE_IP bricks
+nmap -sC -sV MACHINE_IP
 ```
 
 **Output Snippet:**
@@ -152,13 +110,12 @@ nmap -p 80,443 -sV --script=http-enum,http-headers,http-wordpress-enum TARGET_IP
 
 #### 🧠 What This Does
 
-  * `-p 80,443` → Scan web ports
-  * `-sV` → Detect service versions (e.g., Apache version)
-  * `http-enum` → Finds web directories (like /wp-admin)
-  * `http-headers` → Checks server headers (may reveal WordPress clues)
-  * `http-wordpress-enum` → Attempts WordPress detection
+  * `-p 80,443` → Scan web ports.
+  * `-sV` → Detect service versions.
+  * `http-enum` → Finds web directories (like `/wp-admin`).
+  * `http-wordpress-enum` → Attempts WordPress detection.
 
-#### 📊 Example Output (What You Want to See)
+#### 📊 Example Output
 
 ```text
 PORT    STATE SERVICE VERSION
@@ -169,8 +126,6 @@ PORT    STATE SERVICE VERSION
 |      - bricks
 |_   Users: administrator
 ```
-
------
 
 ### 2\. Web Vulnerability Scanning (Metasploit)
 
@@ -187,7 +142,7 @@ run
 
   * WordPress detected
   * Bricks theme version 5.4
-  * Username: administrator
+  * Username: `administrator`
 
 -----
 
@@ -206,8 +161,8 @@ exploit
 
 **Result:**
 
-  * Meterpreter session established
-  * Access gained as `apache` user
+  * Meterpreter session established.
+  * Access gained as `apache` user.
 
 -----
 
@@ -219,19 +174,13 @@ exploit
 cat /data/www/default/650c844110baced87e1606453b93f22a.txt
 ```
 
------
-
 ### ⚠️ Identifying Suspicious Process
 
 ```bash
-ps
+ps aux
 ```
 
-**Suspicious Process:**
-
-  * `nm-inet-dialog`
-
------
+  * **Suspicious Process:** `nm-inet-dialog`
 
 ### 🔁 Persistence Mechanism
 
@@ -239,11 +188,7 @@ ps
 cat /etc/systemd/system/ubuntu.service
 ```
 
-**Service Identified:**
-
-  * `ubuntu.service`
-
------
+  * **Service Identified:** `ubuntu.service`
 
 ### 🧪 Malware Analysis
 
@@ -251,11 +196,7 @@ cat /etc/systemd/system/ubuntu.service
 cat /lib/NetworkManager/inet.conf
 ```
 
-**Log File:**
-
-  * `inet.conf`
-
------
+  * **Log File:** `inet.conf`
 
 ### 💰 Wallet Extraction
 
@@ -263,15 +204,11 @@ cat /lib/NetworkManager/inet.conf
 echo "[HEX_STRING]" | xxd -r -p | base64 -d | base64 -d
 ```
 
-**Extracted Wallet:**
-
-  * `bc1qyk79fcp9hd5kreprce89tkh4wrtl8avt4l67qa`
-
------
+  * **Extracted Wallet:** `bc1qyk79fcp9hd5kreprce89tkh4wrtl8avt4l67qa`
 
 ### 🧠 Threat Attribution
 
-  * Associated Threat Group: **LockBit**
+  * **Associated Threat Group:** LockBit
 
 -----
 
@@ -292,24 +229,19 @@ echo "[HEX_STRING]" | xxd -r -p | base64 -d | base64 -d
 
 This investigation demonstrated a full attack lifecycle:
 
-  * Reconnaissance and scanning
-  * Vulnerability identification
-  * Exploitation using Metasploit
-  * Post-exploitation analysis
-  * Threat attribution
-
-It highlights the importance of:
-
-  * Regular patching
-  * Monitoring systems
-  * Securing web applications
+1.  Reconnaissance and scanning
+2.  Vulnerability identification
+3.  Exploitation using Metasploit
+4.  Post-exploitation analysis
+5.  Threat attribution
 
 -----
 
 ## 📚 Reference
 
-  * TryHackMe – Bricks Heist Room
-  * Original Write-up: [https://github.com/WisdomWashe/cybersec/blob/main/WriteUps/Bricks-Heist-Writeup.md](https://github.com/WisdomWashe/cybersec/blob/main/WriteUps/Bricks-Heist-Writeup.md)
+  * [TryHackMe – Bricks Heist Room](https://www.google.com/search?q=https://tryhackme.com/room/bricksheist)
+  * [Original Write-up Source](https://github.com/WisdomWashe/cybersec/blob/main/WriteUps/Bricks-Heist-Writeup.md)
 
------
+<!-- end list -->
 
+```

